@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <title>The Dual Mechanisms of Spatial Variable Binding in Vision-Language Models</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description"
+    content="VLMs bind objects to spatial relations through two concurrent ordering mechanisms: a dominant signal from the vision encoder and a secondary backup formed in the language model backbone." />
+  <meta property="og:title" content="The Dual Mechanisms of Spatial Variable Binding in Vision-Language Models" />
+  <meta property="og:description"
+    content="VLMs bind objects to spatial relations through two concurrent ordering mechanisms: a dominant signal from the vision encoder and a secondary backup formed in the language model backbone." />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="The Dual Mechanisms of Spatial Variable Binding in Vision-Language Models" />
+  <meta name="twitter:description"
+    content="VLMs bind objects to spatial relations through two concurrent ordering mechanisms: a dominant signal from the vision encoder and a secondary backup formed in the language model backbone." />
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+
+  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js"
+    integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Math&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,700" rel="stylesheet">
+  <link href="style.css" rel="stylesheet">
+
+  <style>
+    .relatedthumb {
+      float: left;
+      width: 200px;
+      margin: 3px 10px 7px 0;
+    }
+
+    .relatedblock {
+      clear: both;
+      display: inline-block;
+    }
+
+    .bold-sc {
+      font-variant: small-caps;
+      font-weight: bold;
+    }
+
+    .cite,
+    .citegroup {
+      margin-bottom: 8px;
+    }
+
+    :target {
+      background-color: yellow;
+    }
+
+    .figure-caption {
+      text-align: center;
+      font-style: italic;
+      margin-top: 10px;
+      margin-bottom: 20px;
+    }
+
+    .lookback-figure {
+      margin: 30px auto;
+      max-width: 800px;
+      text-align: center;
+    }
+  </style>
+
+</head>
+
+<body class="nd-docs">
+  <div class="nd-pageheader">
+    <div class="container">
+      <h1 class="lead">
+        The Dual Mechanisms of Spatial Variable Binding in Vision&ndash;Language Models
+      </h1>
+      <address>
+        <nobr><a href="#" target="_blank">Kelly Cui</a><sup>1</sup><sup>*</sup>,</nobr>
+        <nobr><a href="#" target="_blank">Nikhil Prakash</a><sup>2</sup><sup>*</sup>,</nobr>
+        <nobr><a href="#" target="_blank">Shoval Messica</a><sup>*</sup>,</nobr>
+        <nobr><a href="#" target="_blank">Ayush Raina</a><sup>3</sup>,</nobr>
+        <nobr><a href="#" target="_blank">David Bau</a><sup>2</sup>,</nobr>
+        <nobr><a href="#" target="_blank">Antonio Torralba</a><sup>1</sup>,</nobr>
+        <nobr><a href="#" target="_blank">Tamar Rott Shaham</a><sup>1</sup></nobr>
+        <br>
+        <nobr><sup>1</sup><a href="https://www.csail.mit.edu/" target="_blank">MIT CSAIL</a>,</nobr>
+        <nobr><sup>2</sup><a href="https://khoury.northeastern.edu/" target="_blank">Northeastern University</a>,</nobr>
+        <nobr><sup>3</sup><a href="#" target="_blank">Sony PlayStation</a></nobr>
+        <br>
+        <span style="font-size: 1rem;"><sup>*</sup>Equal contribution</span>
+      </address>
+    </div>
+  </div><!-- end nd-pageheader -->
+
+  <div class="container">
+    <div class="row justify-content-center text-center">
+
+      <p>
+        <a href="https://arxiv.org/abs/2603.22278" class="d-inline-block p-3 align-top" target="_blank"><img
+            height="100" width="78" src="images/paper-thumb.png" style="border:1px solid; margin: 0 38px;"
+            alt="ArXiv Preprint thumbnail" data-nothumb=""><br>ArXiv<br>
+          Preprint
+        </a>
+
+        <a href="https://github.com/Nix07/spatial-variable-binding" class="d-inline-block p-3 align-top"
+            target="_blank"><img height="100" width="78" src="images/code-thumb.png"
+            style="border:1px solid; margin: 0 38px;" alt="Github code thumbnail" data-nothumb=""><br>Source
+          Code<br>Github
+        </a>
+      </p>
+
+      <div class="card" style="max-width: 1020px;">
+        <div class="card-block">
+          <h3>How do AI models figure out where things are in a picture?</h3>
+          <p style="text-align: left;">
+            When you show an AI that can "see" (a <b>vision&ndash;language model</b>, or VLM) a photo and ask
+            something like <i>"what's the cup to the left of the laptop?"</i>, it has to work out which object is
+            where. We looked inside these models to see how they actually do this&mdash;and why they sometimes get
+            it wrong.
+          </p>
+          <p style="text-align: left;">
+            <b>The short version:</b> the model uses two systems at once.
+          </p>
+          <ul style="text-align: left; display: inline-block;">
+            <li>The <b>"eyes"</b> (the vision part) do most of the work. They map out the whole scene&mdash;and
+              spread that layout information across the entire image, even the empty background.</li>
+            <li>The <b>"brain"</b> (the language part) has a backup copy of the same trick, but only leans on it
+              when the eyes come up short.</li>
+          </ul>
+          <p style="text-align: left;">
+            And the fun part: once we understood this, we could give the "eyes" a small nudge and <b>fix more than
+            half of the model's spatial mistakes&mdash;with no retraining at all</b>.
+          </p>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="row">
+      <div class="col">
+
+        <h2>The big idea: the model numbers things by position</h2>
+        <p>
+          Here's the trick at the heart of everything. To keep track of which object is which, the model quietly
+          tags each one with its <b>position in line</b>&mdash;think "1st, 2nd, 3rd" from left to right. It doesn't
+          matter <i>what</i> the object is (a red square, an apple, a chair); what matters is <b>where it sits</b>.
+          When you ask "what's to the left of X?", the model just looks up the right position tag and grabs that
+          object's color or name.
+        </p>
+        <p>
+          This "numbering by position" trick was already known for text-only models. Our question was simpler and
+          more basic: in a model that <i>sees</i>, <b>who creates these position tags&mdash;the eyes or the
+          brain?</b> The answer turned out to be: <b>both, but mostly the eyes.</b>
+        </p>
+
+        <div class="lookback-figure" style="max-width: 1000px;">
+          <img src="images/paper/settings.png" alt="Experimental settings" style="max-width:100%">
+          <div class="figure-caption">
+            <strong>Figure 1: What we tested.</strong> We start simple (rows of colored squares, shapes, and
+            objects) so we can change one thing at a time, then work up to real photos (the <b>What'sUp</b> and
+            <b>COCO</b> datasets). Every task asks the same kind of question: the property of one object, based on
+            where it sits relative to another.
+          </div>
+        </div>
+
+        <h2>What we tested</h2>
+        <p>
+          We started with toy pictures&mdash;three colored squares, shapes, or objects in a row&mdash;because they
+          let us change exactly one thing and watch what the model does. Then we moved to real photos to make sure
+          the findings hold in the messy real world. We ran everything on two popular open models,
+          <b>Qwen2-VL</b> and <b>Gemma-3</b>, and they behaved the same way.
+        </p>
+        <p>
+          To see <i>which part of the model is responsible</i> for a behavior, we use a classic trick: swap a piece
+          of the model's internal "scratchpad" from one image into another and see if the answer changes. If it
+          does, that piece was doing the work.
+        </p>
+
+        <h2>Step 1: Does the model really "number by position"?</h2>
+        <p>
+          First we checked that the position trick is real. We took two pictures with different colors and opposite
+          questions ("left" vs. "right"), then copied a sliver of the model's internal state from one into the
+          other. The result flipped to the object in the <b>matching position</b>&mdash;not the matching
+          color&mdash;exactly what you'd expect if the model is tracking <i>where</i> things are, not <i>what</i>
+          they are.
+        </p>
+
+        <div class="lookback-figure" style="max-width: 420px;">
+          <img src="images/paper/lasttoken_setup.png" alt="Last-token patching setup" style="max-width:100%">
+          <div class="figure-caption">
+            <strong>Figure 2: The test.</strong> Two pictures, opposite questions. We copy the final piece of the
+            model's working memory from the right picture into the left one and watch what the answer becomes.
+          </div>
+        </div>
+
+        <div class="lookback-figure" style="max-width: 1000px;">
+          <img src="images/paper/lasttoken_results.png" alt="Last-token patching results" style="max-width:100%">
+          <div class="figure-caption">
+            <strong>Figure 3:</strong> Reading the model layer by layer, we can see it work in two steps: it
+            <b>first decides which position it wants</b>, and only <b>then looks up that object's color</b>.
+          </div>
+        </div>
+
+        <h2>Step 2: The "eyes" do the heavy lifting</h2>
+        <p>
+          So where do the position tags come from? We trained a tiny detector to read an object's position straight
+          out of the <b>vision encoder</b>&mdash;the part that turns the image into numbers&mdash;and it worked
+          almost perfectly. The surprise: the position information isn't just sitting on the objects. It's
+          <b>smeared across the whole picture, including the blank background</b>, in tidy vertical stripes lined
+          up with each object.
+        </p>
+
+        <div class="lookback-figure">
+          <img src="images/paper/probing_strips.png" alt="Probing visual embeddings" style="max-width:100%">
+          <div class="figure-caption">
+            <strong>Figure 4:</strong> Even empty background areas "know" where the objects are&mdash;the position
+            signal spreads out in stripes, not just on the objects themselves.
+          </div>
+        </div>
+
+        <p>
+          But being <i>readable</i> isn't the same as being <i>used</i>. So we ran the swap test again on the
+          image side&mdash;trading the left and right regions between two pictures. The verdict:
+        </p>
+        <ul>
+          <li>Swapping <b>just the objects</b> &rarr; the answer barely budges (Figure 6).</li>
+          <li>Swapping the objects <b>plus their background stripes</b> &rarr; the answer flips every time
+            (Figure 7).</li>
+        </ul>
+        <p>
+          In other words, that background signal isn't decorative&mdash;<b>it's what the model actually relies
+          on.</b>
+        </p>
+
+        <div class="lookback-figure" style="max-width: 1000px;">
+          <img src="images/paper/object_patching.png" alt="Object patching results" style="max-width:100%">
+          <div class="figure-caption">
+            <strong>Figure 6:</strong> Swapping only the objects&mdash;the answer hardly changes. The objects alone
+            don't carry enough position information.
+          </div>
+        </div>
+
+        <div class="lookback-figure" style="max-width: 1000px;">
+          <img src="images/paper/strip_patching.png" alt="Strip patching results" style="max-width:100%">
+          <div class="figure-caption">
+            <strong>Figure 7:</strong> Swapping the objects <i>and</i> their background stripes&mdash;now the answer
+            flips. The position signal lives in those stripes.
+          </div>
+        </div>
+
+        <h2>Step 3: The "brain" has a backup plan</h2>
+        <p>
+          Does the language part do anything, then? To find out, we <b>wiped the position information out of the
+          image</b> (keeping the colors, but scrambling where things are). The model got much worse&mdash;more
+          proof the vision side matters most&mdash;but it still did <b>better than random guessing</b>. Something
+          was picking up the slack.
+        </p>
+
+        <div class="lookback-figure" style="max-width: 620px;">
+          <img src="images/paper/ablation.png" alt="Ablating ordering information" style="max-width:100%">
+          <div class="figure-caption">
+            <strong>Figure 8:</strong> How we erase position cues from the image: each object is swapped for a copy
+            of itself shown alone in the middle, and the background is replaced with a blank image. Same colors, no
+            "where".
+          </div>
+        </div>
+
+        <p>
+          When we repeated the swap test in this stripped-down setting, the answer flipped again&mdash;this time
+          thanks to the model's <b>middle layers</b>. So when the eyes can't supply the position tags, the
+          <b>language part quietly builds its own</b>. It's a backup, not the star of the show.
+        </p>
+
+        <div class="lookback-figure" style="max-width: 1000px;">
+          <img src="images/paper/backbone_backup.png" alt="LM backbone backup ordering" style="max-width:100%">
+          <div class="figure-caption">
+            <strong>Figure 9:</strong> With the image's position cues removed, the language part steps in&mdash;its
+            middle layers now carry the position information on their own.
+          </div>
+        </div>
+
+        <h2>The payoff: fixing mistakes for free</h2>
+        <p>
+          Here's the practical part. If position information is what matters, what happens if we simply <b>turn up
+          the volume</b> on it? We gave the vision signal a gentle boost&mdash;applied blindly across the whole
+          image, with no labels, no retraining, and no knowing which objects the question is about.
+        </p>
+
+        <p>
+          On real COCO photos, this one simple tweak <b>fixed over half (up to 54.5%) of the model's wrong
+          answers</b>, lifting accuracy by about 20&ndash;30 points&mdash;while a "boost a random direction"
+          baseline did almost nothing. Understanding the mechanism paid off directly.
+        </p>
+
+        <div class="card" style="max-width: 720px; margin: 0 auto 20px;">
+          <h3 class="card-header">The numbers: a small nudge, big gains</h3>
+          <div class="card-block">
+            <table class="table table-sm" style="margin-bottom: 0;">
+              <thead>
+                <tr><th>Intervention</th><th>Gemma Acc.</th><th>Gemma % Corr.</th><th>Qwen Acc.</th><th>Qwen % Corr.</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>None</td><td>0.53</td><td>&ndash;</td><td>0.60</td><td>&ndash;</td></tr>
+                <tr><td>Random amp.</td><td>0.57</td><td>9.6%</td><td>0.65</td><td>13.1%</td></tr>
+                <tr><td><b>Ordering amp.</b></td><td><b>0.72</b></td><td><b>40.2%</b></td><td><b>0.82</b></td><td><b>54.5%</b></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <h2>The takeaways</h2>
+        <ul>
+          <li>To track where things are, AI vision models tag each object with its <b>position in line</b>.</li>
+          <li>Most of that position information comes from the <b>"eyes" (the vision encoder)</b>, not the language
+            part&mdash;and it's <b>spread across the whole image, even the background</b>.</li>
+          <li>The <b>language part keeps a backup copy</b> and only uses it when the eyes fall short.</li>
+          <li>Knowing this, we can <b>boost the signal and fix mistakes for free</b>&mdash;no retraining needed.</li>
+          <li>Bonus lesson for researchers: because the important signal is <i>spread out</i> over many image
+            patches, tools that look at one patch at a time will miss it.</li>
+        </ul>
+
+        <h2>Related Work</h2>
+        <p>
+          A few papers our work builds on:
+        </p>
+
+        <p class="citation">
+          <a href="https://arxiv.org/abs/2506.15871" target="_blank">
+            <img src="images/related_works/visual_symbolic.png" alt="Visual Symbolic Mechanisms (Assouel et al. 2025)">
+            Rim Assouel, Declan Campbell, Yoshua Bengio, Taylor Webb. Visual Symbolic Mechanisms: Emergent Symbol
+            Processing in Vision Language Models. arXiv 2025.
+          </a>
+          <br>
+          <b>In short:</b> Showed that vision models use position-style tags to keep objects straight. We pin down
+          <i>where those tags come from</i>&mdash;mostly the eyes.
+        </p>
+
+        <p class="citation">
+          <a href="https://belief.baulab.info/" target="_blank">
+            <img src="images/related_works/belief.png" alt="Belief Lookbacks (Prakash et al. 2025)">
+            Nikhil Prakash, Natalie Shapira, Arnab Sen Sharma, Christoph Riedl, Yonatan Belinkov, Tamar Rott Shaham,
+            David Bau, Atticus Geiger. Language Models use Lookbacks to Track Beliefs. arXiv 2025.
+          </a>
+          <br>
+          <b>In short:</b> Showed that text models track who-believes-what using the same "number things and look
+          them up later" trick. We carry that idea over to models that see.
+        </p>
+
+        <p class="citation">
+          <a href="https://aclanthology.org/2024.emnlp-main.967/" target="_blank">
+            <img src="images/related_works/OI.png" alt="OI (Dai et al. 2024)">
+            Qin Dai, Benjamin Heinzerling, Kentaro Inui. Representational Analysis of Binding in Language Models. EMNLP
+            2024.
+          </a>
+          <br>
+          <b>In short:</b> Found the "position tag" idea inside text-only models. We show vision models do something
+          similar&mdash;but for them it's only the backup.
+        </p>
+
+        <h2>How to cite</h2>
+        <p>This work is available as a preprint. It can be cited as follows.
+        </p>
+
+        <div class="card">
+          <h3 class="card-header">bibliography</h3>
+          <div class="card-block">
+            <p style="text-indent: -3em; margin-left: 3em;" class="card-text clickselect">
+              Kelly Cui, Nikhil Prakash, Shoval Messica, Ayush Raina, David Bau, Antonio Torralba, Tamar Rott Shaham.
+              "<em>The Dual Mechanisms of Spatial Variable Binding in Vision&ndash;Language Models.</em>" arXiv preprint
+              arXiv:2603.22278 (2026). <nobr>
+              </nobr>
+            </p>
+          </div>
+          <h3 class="card-header">bibtex</h3>
+          <div class="card-block">
+            <pre class="card-text clickselect">
+@article{cui2026dual,
+  title={The Dual Mechanisms of Spatial Variable Binding in Vision--Language Models},
+  author={Cui, Kelly and Prakash, Nikhil and Messica, Shoval and Raina, Ayush and Bau, David and Torralba, Antonio and Shaham, Tamar Rott},
+  journal={arXiv preprint arXiv:2603.22278},
+  year={2026}
+}
+</pre>
+          </div>
+        </div>
+
+
+      </div>
+    </div><!--row -->
+  </div> <!-- container -->
+
+  <footer class="nd-pagefooter">
+    <div class="row">
+      <div class="col-6 col-md text-center">
+        <a href="https://baulab.info/">About the Bau Lab</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+<script>
+  $(document).on('click', '.clickselect', function (ev) {
+    var range = document.createRange();
+    range.selectNodeContents(this);
+    var sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+  });
+</script>
+
+</html>
